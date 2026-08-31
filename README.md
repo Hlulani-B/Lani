@@ -65,12 +65,35 @@ import VolumeAction from './SettingsActions/VolumeAction.js';
 await CommandExecutor.execute(VolumeAction.volumeUp());
 ```
 
-### 4. Tests
+### 4. Live Test
 
-Written 293 Jest tests covering:
+Created `liveTest.js` — a script that runs safe read-only PowerShell commands through `CommandExecutor` to verify the system actually works on the host OS. Confirmed execution of system info, network, and display commands on a live Windows machine.
+
+### 5. Ollama Function Catalogue
+
+Created `ListForOllama.js` — exports a single string containing all 200+ available functions organised by category. This string is fed to Ollama as part of the system prompt so the model knows which action class and method to call for any given user request.
+
+### 6. Ollama Check / Install Pipeline
+
+Three new files handle the full Ollama lifecycle:
+
+- **`OllamaChecker.js`** — helper functions `isOllamaInstalled()` and `isModelAvailable(model)` that return booleans. Checks via CLI first (`ollama --version`), then falls back to the HTTP API at `localhost:11434`.
+- **`OllamaInstaller.js`** — `installOllama(onProgress)` downloads the Windows installer and runs it silently. `pullModel(model, onProgress)` downloads a model via the Ollama API. Both accept a progress callback for live updates.
+- **`index.js`** — Express server (port 3000) that ties everything together:
+  - `GET /api/status` — returns current state (installed, model available, busy installing, etc.)
+  - `GET /api/events` — Server-Sent Events stream for live progress updates
+  - `POST /api/install` — triggers Ollama + model installation
+  - `POST /api/chat` — forwards user messages to Ollama for natural language understanding
+
+### 7. Tests
+
+Written 325 Jest tests across 30 suites covering:
 
 - Every method on every action class (275 tests) — verifies correct command strings and placeholder replacement
 - CommandExecutor (18 tests) — covers success paths, input validation, error handling, and action class integration
+- OllamaChecker (12 tests) — covers CLI and HTTP detection paths, error handling, model availability
+- OllamaInstaller (14 tests) — covers install flow, progress callbacks, error scenarios
+- ListForOllama (6 tests) — verifies catalogue content and format
 
 Run tests with:
 
@@ -81,6 +104,7 @@ npm test
 
 ### What Is Next
 
-- Connect Ollama for natural language understanding — map user input to the correct action class and method
+- Connect Ollama for natural language understanding — map user input to the correct action class and method using the function catalogue
 - Build the CLI interface for typed and spoken input
+- Build the frontend that connects to the SSE endpoint for live installation progress
 - Add support for commands that require admin privileges (UAC elevation)
