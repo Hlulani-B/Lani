@@ -81,9 +81,33 @@ Three new files handle the full Ollama lifecycle:
 - **`OllamaInstaller.js`** — `installOllama(onProgress)` downloads the Windows installer and runs it silently. `pullModel(model, onProgress)` downloads a model via the Ollama API. Both accept a progress callback for live updates.
 - **`index.js`** — Express server (port 3000) that ties everything together:
   - `GET /api/status` — returns current state (installed, model available, busy installing, etc.)
-  - `GET /api/events` — Server-Sent Events stream for live progress updates
-  - `POST /api/install` — triggers Ollama + model installation
+  - `GET /api/events` — Server-Sent Events (SSE) stream for live progress updates
+  - `POST /api/install` — triggers Ollama + model installation. The installer checks if Ollama is already installed and skips installation if so. Returns progress updates via SSE.
   - `POST /api/chat` — forwards user messages to Ollama for natural language understanding
+
+**Frontend Integration:**
+
+The installer sends percentage updates to the frontend via SSE (Server-Sent Events). The frontend should:
+
+1. Connect to the SSE endpoint for live progress:
+```js
+const eventSource = new EventSource('http://localhost:3000/api/events');
+eventSource.onmessage = (event) => {
+  const status = JSON.parse(event.data);
+  // status.percent — current progress percentage (0-100)
+  // status.message — human-readable progress message
+  // status.currentStep — current step (downloading, installing, pulling, ready, error)
+  updateProgressBar(status.percent);
+  updateStatusText(status.message);
+};
+```
+
+2. Call the install endpoint to start installation:
+```js
+await fetch('http://localhost:3000/api/install', { method: 'POST' });
+```
+
+The console logs progress every 10% to reduce noise, while the SSE broadcasts every percentage update to connected frontend clients for smooth progress bar updates.
 
 ### 7. Tests
 
