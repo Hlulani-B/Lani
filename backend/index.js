@@ -337,16 +337,22 @@ app.post('/api/chat', async (req, res) => {
   try {
     const systemPrompt = `You are a Windows settings assistant. Given the user's request, match it to exactly one function from the list below.
 
-Return ONLY valid JSON (no markdown, no explanation) with this structure:
-- If the function needs NO parameters:
-  { "getParameters": false, "action": "ClassName.methodName()" }
-- If the function needs parameters that the user has NOT provided:
-  { "getParameters": true, "action": "ClassName.methodName", "params": [{ "name": "paramName", "type": "number|text|path" }] }
+Return ONLY valid JSON (no markdown, no explanation) with one of these structures:
+
+1. If the function needs NO parameters:
+   { "getParameters": false, "action": "ClassName.methodName()" }
+
+2. If the function needs parameters that the user has NOT provided:
+   { "getParameters": true, "action": "ClassName.methodName", "params": [{ "name": "paramName", "type": "number|text|path" }] }
+
+3. If the request is gibberish, unrelated to Windows settings, or cannot be fulfilled:
+   { "error": 1, "message": "A friendly message explaining what you can help with" }
 
 Rules:
 - Match the user's intent to the closest function.
 - If the user already provided the parameter values in their message, include them and set getParameters to false with the full action string including args.
 - Only set getParameters to true when the function requires parameters and the user has not supplied them.
+- If the request is clearly not about Windows settings or computer actions, return the error format.
 - Return ONLY the JSON object, nothing else.`;
 
     const fullPrompt = `${systemPrompt}\n\n${listForOllama}\n\nUser request: "${message}"\n\nJSON response:`;
@@ -378,18 +384,23 @@ Rules:
       return res.status(502).json({ error: 'Failed to parse Ollama response', raw: rawResponse });
     }
 
+    // If Ollama returned an error (gibberish, unrelated request, etc.)
+    if (parsed.error) {
+      return res.json({ error: 1, message: parsed.message || "I can only help with Windows settings and actions." });
+    }
+
     // If getParameters is false — execute the action immediately
     if (!parsed.getParameters && parsed.action) {
       try {
         const { className, methodName } = parseAction(parsed.action);
         if (!className || !methodName) {
-          return res.status(500).json({ error: `Could not parse action: ${parsed.action}` });
+          return res.json({ error: 1, message: "I couldn't understand that request. Could you rephrase it?" });
         }
         const command = callAction(className, methodName);
         const result = await CommandExecutor.execute(command);
         return res.json({ getParameters: false, action: parsed.action, result });
       } catch (execError) {
-        return res.status(500).json({ error: `Execution failed: ${execError.message}` });
+        return res.json({ error: 1, message: `Something went wrong: ${execError.message}` });
       }
     }
 
@@ -420,8 +431,8 @@ Rules:
       });
     }
 
-    // Fallback
-    res.json({ getParameters: false, action: parsed.action || null, raw: rawResponse });
+    // Fallback — no action returned
+    res.json({ error: 1, message: "I'm not sure how to help with that. I can control Windows settings like volume, brightness, wifi, theme, and more." });
   } catch (error) {
     res.status(500).json({ error: `Failed to reach Ollama: ${error.message}` });
   }
