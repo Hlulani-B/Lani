@@ -1,5 +1,5 @@
 import https from 'https';
-import { execFile } from 'child_process';
+import { execFile, spawn } from 'child_process';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -77,13 +77,32 @@ export async function installOllama(onProgress) {
 
     notify('downloading', 'Download complete', 100);
 
-    // Step 2 — Install silently
+    // Step 2 — Install silently (requires admin privileges)
     notify('installing', 'Installing...', 0);
 
     await new Promise((resolve, reject) => {
-      execFile(installerPath, ['/VERYSILENT', '/NORESTART'], { timeout: 120000 }, (error) => {
-        if (error) return reject(error);
-        resolve();
+      // Use PowerShell Start-Process with -Verb RunAs to request admin privileges
+      // This will show a UAC prompt, but the install itself is silent
+      const psCommand = `Start-Process -FilePath '${installerPath.replace(/'/g, "''")}' -ArgumentList '/VERYSILENT','/NORESTART' -Verb RunAs -Wait`;
+      
+      const proc = spawn('powershell', ['-NoProfile', '-Command', psCommand], {
+        timeout: 120000,
+        windowsHide: true,
+      });
+
+      let stderr = '';
+      proc.stderr.on('data', (data) => { stderr += data.toString(); });
+
+      proc.on('close', (code) => {
+        if (code !== 0) {
+          reject(new Error(`Installer exited with code ${code}: ${stderr}`));
+        } else {
+          resolve();
+        }
+      });
+
+      proc.on('error', (err) => {
+        reject(new Error(`Failed to start installer: ${err.message}`));
       });
     });
 
