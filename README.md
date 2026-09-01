@@ -210,6 +210,32 @@ The `/api/chat` endpoint handles invalid input gracefully:
 - Unparseable actions and execution failures also return user-friendly error messages instead of raw 500 errors.
 - The frontend displays the error message in a styled error box on the CommandInput screen.
 
+### 12. Challenges & Solutions
+
+**Hiding Ollama from the user**
+- Problem: The frontend and backend messages kept mentioning "Ollama" which confused users.
+- Solution: Replaced all user-facing text with generic terms like "AI engine", "AI model", "Lani setup". Variable names and code comments still reference Ollama, but the user never sees it.
+
+**Frontend stuck on "Checking setup..."**
+- Problem: The frontend only listened for SSE events, but the backend's `ready` event was broadcast before the frontend's EventSource had connected. The event was missed and the UI stayed stuck.
+- Solution: Frontend now checks the `/api/install` HTTP response directly for `currentStep: 'ready'`, not just SSE events. Backend also broadcasts `ready` before sending the response.
+
+**Progress bar glitching (jumping between percentages)**
+- Problem: React StrictMode double-mounts components in development, creating multiple SSE connections. Each connection received the same broadcast, causing conflicting state updates.
+- Solution: Used `useRef` to track the EventSource instance and `hasStartedRef` to prevent double-initialization. Only one SSE connection is ever active.
+
+**Ollama installer failing silently**
+- Problem: The silent installer (`/VERYSILENT`) needs admin privileges to work. Without elevation, it failed silently and Ollama was never installed.
+- Solution: Changed from `execFile` to PowerShell's `Start-Process -Verb RunAs` which triggers a UAC prompt. The install itself stays silent after the user approves.
+
+**Backend losing state on restart**
+- Problem: The backend stored all state in memory. When it restarted, it forgot whether Ollama was installed and would try to reinstall.
+- Solution: Added `initializeStatus()` that runs on startup and checks the actual system state using `isOllamaInstalled()` and `isModelAvailable()`. If everything is set up, it sets `currentStep: 'ready'` immediately.
+
+**ESM modules with Electron**
+- Problem: The project uses ES modules (`import`/`export`) with `"type": "module"` in package.json, but Electron's main process traditionally uses CommonJS (`require`).
+- Solution: Converted `electron.js` to ESM syntax, using `fileURLToPath` and `path.dirname` to recreate `__dirname` which doesn't exist in ESM.
+
 ### What Is Next
 
 - Add support for commands that require admin privileges (UAC elevation)
