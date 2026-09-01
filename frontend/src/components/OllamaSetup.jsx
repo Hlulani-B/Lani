@@ -36,7 +36,7 @@ function OllamaSetup({ onComplete }) {
         console.log('[Status] Response data:', statusData);
         
         // If already ready, skip install UI entirely
-        if (statusData.currentStep === 'ready' && statusData.ollamaInstalled && statusData.modelAvailable) {
+        if (statusData.ollamaInstalled && statusData.modelAvailable) {
           console.log('[OllamaSetup] Already ready, skipping to CommandInput');
           setDebug('Already set up, launching...');
           onComplete();

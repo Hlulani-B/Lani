@@ -201,6 +201,9 @@ app.get('/api/status', async (_req, res) => {
   status.ollamaInstalled = await isOllamaInstalled();
   if (status.ollamaInstalled) {
     status.modelAvailable = await isModelAvailable(DEFAULT_MODEL);
+    if (status.modelAvailable) {
+      status.currentStep = 'ready';
+    }
   }
   res.json(status);
 });
