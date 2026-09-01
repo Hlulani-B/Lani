@@ -19,8 +19,14 @@ function OllamaSetup({ onComplete }) {
     // Open SSE connection first to receive progress updates
     eventSourceRef.current = new EventSource(`${API}/api/events`);
 
+    eventSourceRef.current.onopen = () => {
+      console.log('[SSE] Connected to /api/events');
+    };
+
     eventSourceRef.current.onmessage = (event) => {
+      console.log('[SSE] Raw event:', event.data);
       const data = JSON.parse(event.data);
+      console.log('[SSE] Parsed:', data);
       setPercent(data.percent || 0);
       setMessage(data.message || '');
 
@@ -45,7 +51,7 @@ function OllamaSetup({ onComplete }) {
 
     // Call /api/install — backend checks if already installed, skips if so
     setInstalling(true);
-    setMessage('Setting up Lani...');
+    setMessage(''); // Let SSE provide the live message
 
     fetch(`${API}/api/install`, { method: 'POST' })
       .then((res) => res.json())
@@ -84,7 +90,7 @@ function OllamaSetup({ onComplete }) {
     setError(null);
     setShowButton(false);
     setInstalling(true);
-    setMessage('Setting up Lani...');
+    setMessage(''); // Let SSE provide the live message
 
     // Close any existing connection
     if (eventSourceRef.current) {
@@ -93,8 +99,13 @@ function OllamaSetup({ onComplete }) {
     }
 
     eventSourceRef.current = new EventSource(`${API}/api/events`);
+    eventSourceRef.current.onopen = () => {
+      console.log('[SSE] Connected to /api/events (retry)');
+    };
     eventSourceRef.current.onmessage = (event) => {
+      console.log('[SSE] Raw event:', event.data);
       const data = JSON.parse(event.data);
+      console.log('[SSE] Parsed:', data);
       setPercent(data.percent || 0);
       setMessage(data.message || '');
 
@@ -148,13 +159,12 @@ function OllamaSetup({ onComplete }) {
         <h2 style={styles.title}>Lani</h2>
         <p style={styles.subtitle}>Windows Settings via Natural Language</p>
         <div style={styles.card}>
-          <p style={styles.info}>Setting up Lani...</p>
           <div style={styles.progressTrack}>
             <div style={{ ...styles.progressFill, width: `${percent}%` }}>
               <span style={styles.progressText}>{percent}%</span>
             </div>
           </div>
-          <p style={styles.message}>{message}</p>
+          <p style={styles.message}>{message || 'Starting...'}</p>
           {error && <p style={styles.error}>{error}</p>}
         </div>
       </div>
