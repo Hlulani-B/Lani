@@ -1,5 +1,5 @@
 import { execFile } from 'child_process';
-import CommandExecutor from '../CommandExecutor.js';
+import CommandExecutor from '../functions/CommandExecutor.js';
 
 jest.mock('child_process');
 

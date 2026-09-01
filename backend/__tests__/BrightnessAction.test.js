@@ -1,5 +1,5 @@
-import BrightnessAction from '../SettingsActions/BrightnessAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import BrightnessAction from '../functions/SettingsActions/BrightnessAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('BrightnessAction', () => {
   test('brightnessSet replaces LEVEL placeholder', () => {

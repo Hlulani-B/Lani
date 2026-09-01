@@ -1,5 +1,5 @@
-import WifiAction from '../SettingsActions/WifiAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import WifiAction from '../functions/SettingsActions/WifiAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('WifiAction', () => {
   test('wifiOn returns correct command', () => {

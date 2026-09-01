@@ -1,5 +1,5 @@
-import SettingsPagesAction from '../SettingsActions/SettingsPagesAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import SettingsPagesAction from '../functions/SettingsActions/SettingsPagesAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('SettingsPagesAction', () => {
   const simpleMethods = [

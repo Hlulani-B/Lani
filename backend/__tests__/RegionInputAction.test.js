@@ -1,5 +1,5 @@
-import RegionInputAction from '../SettingsActions/RegionInputAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import RegionInputAction from '../functions/SettingsActions/RegionInputAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('RegionInputAction', () => {
   test('regionSettingsOpen returns correct command', () => {

@@ -1,9 +1,9 @@
-import CommandExecutor from './CommandExecutor.js';
-import MiscAction from './SettingsActions/MiscAction.js';
-import PowerAction from './SettingsActions/PowerAction.js';
-import SystemAppsAction from './SettingsActions/SystemAppsAction.js';
-import VolumeAction from './SettingsActions/VolumeAction.js';
-import NetworkAction from './SettingsActions/NetworkAction.js';
+import CommandExecutor from './functions/CommandExecutor.js';
+import MiscAction from './functions/SettingsActions/MiscAction.js';
+import PowerAction from './functions/SettingsActions/PowerAction.js';
+import SystemAppsAction from './functions/SettingsActions/SystemAppsAction.js';
+import VolumeAction from './functions/SettingsActions/VolumeAction.js';
+import NetworkAction from './functions/SettingsActions/NetworkAction.js';
 
 console.log('=== Lani — Live Test ===\n');
 

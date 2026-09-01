@@ -1,5 +1,5 @@
-import NetworkAction from '../SettingsActions/NetworkAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import NetworkAction from '../functions/SettingsActions/NetworkAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('NetworkAction', () => {
   test('firewallOn returns correct command', () => {

@@ -1,5 +1,5 @@
-import VolumeAction from '../SettingsActions/VolumeAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import VolumeAction from '../functions/SettingsActions/VolumeAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('VolumeAction', () => {
   test('volumeUp returns correct command', () => {

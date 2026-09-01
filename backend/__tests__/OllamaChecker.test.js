@@ -1,6 +1,6 @@
 import { execFile } from 'child_process';
 import http from 'http';
-import { isOllamaInstalled, isModelAvailable } from '../OllamaChecker.js';
+import { isOllamaInstalled, isModelAvailable } from '../functions/OllamaChecker.js';
 
 jest.mock('child_process');
 jest.mock('http');

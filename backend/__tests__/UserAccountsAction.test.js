@@ -1,5 +1,5 @@
-import UserAccountsAction from '../SettingsActions/UserAccountsAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import UserAccountsAction from '../functions/SettingsActions/UserAccountsAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('UserAccountsAction', () => {
   test('accountsSettingsOpen returns correct command', () => {

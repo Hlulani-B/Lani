@@ -1,5 +1,5 @@
-import ScreenshotAction from '../SettingsActions/ScreenshotAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import ScreenshotAction from '../functions/SettingsActions/ScreenshotAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('ScreenshotAction', () => {
   test('screenshotFullscreen returns correct command', () => {

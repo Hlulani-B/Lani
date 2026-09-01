@@ -1,5 +1,5 @@
-import NotificationsAction from '../SettingsActions/NotificationsAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import NotificationsAction from '../functions/SettingsActions/NotificationsAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('NotificationsAction', () => {
   test('notificationsSettingsPageOpen returns correct command', () => {

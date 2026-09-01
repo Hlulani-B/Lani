@@ -1,5 +1,5 @@
-import MiscAction from '../SettingsActions/MiscAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import MiscAction from '../functions/SettingsActions/MiscAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('MiscAction', () => {
   test('screenOff returns correct command', () => {

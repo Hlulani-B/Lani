@@ -1,5 +1,5 @@
-import DisplayAction from '../SettingsActions/DisplayAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import DisplayAction from '../functions/SettingsActions/DisplayAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('DisplayAction', () => {
   const simpleMethods = [

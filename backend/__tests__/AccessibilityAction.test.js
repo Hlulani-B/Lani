@@ -1,5 +1,5 @@
-import AccessibilityAction from '../SettingsActions/AccessibilityAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import AccessibilityAction from '../functions/SettingsActions/AccessibilityAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('AccessibilityAction', () => {
   const simpleMethods = [

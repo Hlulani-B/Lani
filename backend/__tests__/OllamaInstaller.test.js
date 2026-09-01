@@ -1,4 +1,4 @@
-import { installOllama, pullModel } from '../OllamaInstaller.js';
+import { installOllama, pullModel } from '../functions/OllamaInstaller.js';
 import https from 'https';
 import { execFile } from 'child_process';
 

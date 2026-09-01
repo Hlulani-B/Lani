@@ -1,5 +1,5 @@
-import DefenderAction from '../SettingsActions/DefenderAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import DefenderAction from '../functions/SettingsActions/DefenderAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('DefenderAction', () => {
   test('defenderSettingsOpen returns correct command', () => {

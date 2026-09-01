@@ -1,5 +1,5 @@
-import WindowsUpdateAction from '../SettingsActions/WindowsUpdateAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import WindowsUpdateAction from '../functions/SettingsActions/WindowsUpdateAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('WindowsUpdateAction', () => {
   test('windowsUpdateCheck returns correct command', () => {

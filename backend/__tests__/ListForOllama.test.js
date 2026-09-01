@@ -1,4 +1,4 @@
-import listForOllama from '../ListForOllama.js';
+import listForOllama from '../functions/ListForOllama.js';
 
 describe('ListForOllama', () => {
   test('exports a non-empty string', () => {

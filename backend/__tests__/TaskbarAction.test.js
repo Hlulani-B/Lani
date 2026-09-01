@@ -1,5 +1,5 @@
-import TaskbarAction from '../SettingsActions/TaskbarAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import TaskbarAction from '../functions/SettingsActions/TaskbarAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('TaskbarAction', () => {
   test('taskbarAlignLeft returns correct command', () => {

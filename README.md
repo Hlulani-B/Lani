@@ -36,12 +36,12 @@ Each entry is the raw PowerShell command ready to be executed with `powershell -
 
 ### 2. Settings Action Classes
 
-Created 26 class files in `SettingsActions/` — one class per file, each wrapping the related commands as static methods. Parameterised commands (like `volumeSet`, `wallpaperSet`, `vpnConnect`) accept arguments and replace the placeholders before returning the command string.
+Created 26 class files in `functions/SettingsActions/` — one class per file, each wrapping the related commands as static methods. Parameterised commands (like `volumeSet`, `wallpaperSet`, `vpnConnect`) accept arguments and replace the placeholders before returning the command string.
 
 Example usage:
 
 ```js
-import VolumeAction from './SettingsActions/VolumeAction.js';
+import VolumeAction from './functions/SettingsActions/VolumeAction.js';
 
 const cmd = VolumeAction.volumeUp();       // returns the PowerShell command string
 const cmd2 = VolumeAction.volumeSet(50);   // replaces {LEVEL} with 50
@@ -49,7 +49,7 @@ const cmd2 = VolumeAction.volumeSet(50);   // replaces {LEVEL} with 50
 
 ### 3. Command Executor
 
-Created `CommandExecutor.js` — takes a command string from any action class and executes it on the OS via `powershell -NoProfile -Command`. Returns a Promise that resolves with the trimmed stdout.
+Created `functions/CommandExecutor.js` — takes a command string from any action class and executes it on the OS via `powershell -NoProfile -Command`. Returns a Promise that resolves with the trimmed stdout.
 
 - Input validation (rejects empty, null, or non-string commands)
 - Configurable timeout (defaults to 30 seconds)
@@ -59,8 +59,8 @@ Created `CommandExecutor.js` — takes a command string from any action class an
 Example usage:
 
 ```js
-import CommandExecutor from './CommandExecutor.js';
-import VolumeAction from './SettingsActions/VolumeAction.js';
+import CommandExecutor from './functions/CommandExecutor.js';
+import VolumeAction from './functions/SettingsActions/VolumeAction.js';
 
 await CommandExecutor.execute(VolumeAction.volumeUp());
 ```
@@ -71,14 +71,14 @@ Created `liveTest.js` — a script that runs safe read-only PowerShell commands 
 
 ### 5. Ollama Function Catalogue
 
-Created `ListForOllama.js` — exports a single string containing all 200+ available functions organised by category. This string is fed to Ollama as part of the system prompt so the model knows which action class and method to call for any given user request.
+Created `functions/ListForOllama.js` — exports a single string containing all 200+ available functions organised by category. This string is fed to Ollama as part of the system prompt so the model knows which action class and method to call for any given user request.
 
 ### 6. Ollama Check / Install Pipeline
 
-Three new files handle the full Ollama lifecycle:
+Three new files in `functions/` handle the full Ollama lifecycle:
 
-- **`OllamaChecker.js`** — helper functions `isOllamaInstalled()` and `isModelAvailable(model)` that return booleans. Checks via CLI first (`ollama --version`), then falls back to the HTTP API at `localhost:11434`.
-- **`OllamaInstaller.js`** — `installOllama(onProgress)` downloads the Windows installer and runs it silently. `pullModel(model, onProgress)` downloads a model via the Ollama API. Both accept a progress callback for live updates.
+- **`functions/OllamaChecker.js`** — helper functions `isOllamaInstalled()` and `isModelAvailable(model)` that return booleans. Checks via CLI first (`ollama --version`), then falls back to the HTTP API at `localhost:11434`.
+- **`functions/OllamaInstaller.js`** — `installOllama(onProgress)` downloads the Windows installer and runs it silently. `pullModel(model, onProgress)` downloads a model via the Ollama API. Both accept a progress callback for live updates.
 - **`index.js`** — Express server (port 3000) that ties everything together:
   - `GET /api/status` — returns current state (installed, model available, busy installing, etc.)
   - `GET /api/events` — Server-Sent Events (SSE) stream for live progress updates
@@ -109,15 +109,45 @@ await fetch('http://localhost:3000/api/install', { method: 'POST' });
 
 The console logs progress every 10% to reduce noise, while the SSE broadcasts every percentage update to connected frontend clients for smooth progress bar updates.
 
-### 7. Tests
+### 7. Ollama Chat & Dynamic Action Execution
 
-Written 325 Jest tests across 30 suites covering:
+The `/api/chat` endpoint now sends the user message together with the full function catalogue (`ListForOllama`) to Ollama. The model returns a JSON response with:
+
+- `getParameters: false` — the model picked an action that needs no user input. The backend parses the action string (e.g. `VolumeAction.volumeUp()`), dynamically calls the method, executes the resulting PowerShell command via `CommandExecutor`, and returns the result.
+- `getParameters: true` — the action requires parameters (e.g. `volumeSet(50)`). The backend returns the action name and parameter definitions to the frontend so it can show a form.
+
+The frontend then collects the parameters and calls `POST /api/execute` with the action + values, which executes the command and returns the result.
+
+Key helpers in `index.js`:
+
+- `actionMap` — maps class name strings to imported action classes
+- `parseAction(actionStr)` — splits `"ClassName.methodName()"` into `{ className, methodName }`
+- `callAction(className, methodName, args)` — dynamically invokes the static method
+
+### 8. Network Info Helper
+
+Created `functions/NetworkInfoHelper.js` — auto-detects network parameters that users shouldn't have to type manually:
+
+- `getActiveAdapter()` — finds the active network adapter name
+- `getCurrentIp(adapter)` — gets the current IP address
+- `getSubnetPrefix(adapter)` — gets the subnet prefix length
+- `getGateway(adapter)` — gets the default gateway
+- `getCurrentDns(adapter)` — gets configured DNS servers
+- `getStaticIpDefaults()` — combines adapter + IP + prefix + gateway
+- `getDnsDefaults()` — combines adapter + DNS servers
+
+When Ollama returns `getParameters: true` for a network action (e.g. `staticIpSet`, `dnsSet`), the backend auto-fills the detectable parameters and only sends the unknowns to the frontend. This means the user only has to provide what they actually want to change.
+
+### 9. Tests
+
+Written 342 Jest tests across 31 suites covering:
 
 - Every method on every action class (275 tests) — verifies correct command strings and placeholder replacement
 - CommandExecutor (18 tests) — covers success paths, input validation, error handling, and action class integration
 - OllamaChecker (12 tests) — covers CLI and HTTP detection paths, error handling, model availability
 - OllamaInstaller (14 tests) — covers install flow, progress callbacks, error scenarios
 - ListForOllama (6 tests) — verifies catalogue content and format
+- NetworkInfoHelper (17 tests) — covers all 7 functions: adapter detection, IP, subnet, gateway, DNS, and combined defaults
 
 Run tests with:
 
@@ -128,7 +158,6 @@ npm test
 
 ### What Is Next
 
-- Connect Ollama for natural language understanding — map user input to the correct action class and method using the function catalogue
-- Build the CLI interface for typed and spoken input
-- Build the frontend that connects to the SSE endpoint for live installation progress
+- Build the React + Electron frontend with chat interface and parameter forms
+- Connect the frontend to the SSE endpoint for live installation progress
 - Add support for commands that require admin privileges (UAC elevation)

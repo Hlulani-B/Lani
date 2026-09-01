@@ -1,5 +1,5 @@
-import VpnProxyAction from '../SettingsActions/VpnProxyAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import VpnProxyAction from '../functions/SettingsActions/VpnProxyAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('VpnProxyAction', () => {
   test('vpnSettingsOpen returns correct command', () => {

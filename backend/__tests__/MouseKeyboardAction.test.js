@@ -1,5 +1,5 @@
-import MouseKeyboardAction from '../SettingsActions/MouseKeyboardAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import MouseKeyboardAction from '../functions/SettingsActions/MouseKeyboardAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('MouseKeyboardAction', () => {
   test('mouseSettingsOpen returns correct command', () => {

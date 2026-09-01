@@ -1,5 +1,5 @@
-import PrivacyAction from '../SettingsActions/PrivacyAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import PrivacyAction from '../functions/SettingsActions/PrivacyAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('PrivacyAction', () => {
   const simpleMethods = [

@@ -1,5 +1,5 @@
-import ClipboardAction from '../SettingsActions/ClipboardAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import ClipboardAction from '../functions/SettingsActions/ClipboardAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('ClipboardAction', () => {
   test('clipboardHistoryOn returns correct command', () => {

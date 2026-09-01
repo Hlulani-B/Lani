@@ -1,5 +1,5 @@
-import SystemAppsAction from '../SettingsActions/SystemAppsAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import SystemAppsAction from '../functions/SettingsActions/SystemAppsAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('SystemAppsAction', () => {
   const simpleMethods = [

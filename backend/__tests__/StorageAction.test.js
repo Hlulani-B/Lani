@@ -1,5 +1,5 @@
-import StorageAction from '../SettingsActions/StorageAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import StorageAction from '../functions/SettingsActions/StorageAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('StorageAction', () => {
   test('storageSettingsOpen returns correct command', () => {

@@ -1,5 +1,5 @@
-import ThemeAction from '../SettingsActions/ThemeAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import ThemeAction from '../functions/SettingsActions/ThemeAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('ThemeAction', () => {
   test('darkModeOn returns correct command', () => {

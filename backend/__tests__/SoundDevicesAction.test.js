@@ -1,5 +1,5 @@
-import SoundDevicesAction from '../SettingsActions/SoundDevicesAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import SoundDevicesAction from '../functions/SettingsActions/SoundDevicesAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('SoundDevicesAction', () => {
   test('soundSettingsOpen returns correct command', () => {

@@ -1,5 +1,5 @@
-import PowerAction from '../SettingsActions/PowerAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import PowerAction from '../functions/SettingsActions/PowerAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('PowerAction', () => {
   const simpleMethods = [

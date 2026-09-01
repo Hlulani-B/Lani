@@ -1,5 +1,5 @@
-import BluetoothAction from '../SettingsActions/BluetoothAction.js';
-import { windowsSettingsCommands } from '../WindowSettingsCommands.js';
+import BluetoothAction from '../functions/SettingsActions/BluetoothAction.js';
+import { windowsSettingsCommands } from '../functions/WindowSettingsCommands.js';
 
 describe('BluetoothAction', () => {
   test('bluetoothOn returns correct command', () => {
