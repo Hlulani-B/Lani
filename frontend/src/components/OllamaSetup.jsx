@@ -124,8 +124,7 @@ function OllamaSetup({ onComplete }) {
         <p style={styles.subtitle}>Windows Settings via Natural Language</p>
         <div style={styles.card}>
           <p style={styles.info}>
-            Lani needs to download a few things before it can get started.
-            This only happens once.
+            First time setup. Lani needs a couple of things installed before it can run.
           </p>
           {error && <p style={styles.error}>{error}</p>}
           <button style={styles.button} onClick={handleInstall}>
