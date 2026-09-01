@@ -66,6 +66,15 @@ function OllamaSetup({ onComplete }) {
     fetch(`${API}/api/install`, { method: 'POST' })
       .then((res) => res.json())
       .then((data) => {
+        console.log('[Install] Response:', data);
+        setDebug(`Install response: step=${data.status?.currentStep}, percent=${data.status?.percent}`);
+        
+        // Grab current progress from response immediately
+        if (data.status) {
+          setPercent(data.status.percent || 0);
+          setMessage(data.status.message || '');
+        }
+        
         // Check response directly — SSE might have fired before we connected
         if (data.status && data.status.currentStep === 'ready') {
           if (eventSourceRef.current) {
@@ -136,6 +145,15 @@ function OllamaSetup({ onComplete }) {
     fetch(`${API}/api/install`, { method: 'POST' })
       .then((res) => res.json())
       .then((data) => {
+        console.log('[Install] Response:', data);
+        setDebug(`Install response: step=${data.status?.currentStep}, percent=${data.status?.percent}`);
+        
+        // Grab current progress from response immediately
+        if (data.status) {
+          setPercent(data.status.percent || 0);
+          setMessage(data.status.message || '');
+        }
+        
         if (data.status && data.status.currentStep === 'ready') {
           if (eventSourceRef.current) {
             eventSourceRef.current.close();
