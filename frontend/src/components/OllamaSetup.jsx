@@ -8,6 +8,7 @@ function OllamaSetup({ onComplete }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
   const [showButton, setShowButton] = useState(false);
+  const [debug, setDebug] = useState('Waiting for SSE...');
   const eventSourceRef = useRef(null);
   const hasStartedRef = useRef(false);
 
@@ -21,29 +22,38 @@ function OllamaSetup({ onComplete }) {
 
     eventSourceRef.current.onopen = () => {
       console.log('[SSE] Connected to /api/events');
+      setDebug('SSE connected');
     };
 
     eventSourceRef.current.onmessage = (event) => {
       console.log('[SSE] Raw event:', event.data);
-      const data = JSON.parse(event.data);
-      console.log('[SSE] Parsed:', data);
-      setPercent(data.percent || 0);
-      setMessage(data.message || '');
+      try {
+        const data = JSON.parse(event.data);
+        console.log('[SSE] Parsed:', data);
+        setDebug(`Received: percent=${data.percent}, step=${data.currentStep}`);
+        setPercent(data.percent || 0);
+        setMessage(data.message || '');
 
-      if (data.currentStep === 'ready') {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-        setInstalling(false);
-        onComplete();
-      }
+        if (data.currentStep === 'ready') {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+          setInstalling(false);
+          onComplete();
+        }
 
-      if (data.currentStep === 'error') {
-        setError(data.message || 'Something went wrong.');
-        setInstalling(false);
+        if (data.currentStep === 'error') {
+          setError(data.message || 'Something went wrong.');
+          setInstalling(false);
+        }
+      } catch (e) {
+        console.error('[SSE] Parse error:', e);
+        setDebug(`Parse error: ${e.message}`);
       }
     };
 
-    eventSourceRef.current.onerror = () => {
+    eventSourceRef.current.onerror = (err) => {
+      console.error('[SSE] Error:', err);
+      setDebug(`SSE error: ${err.type}`);
       // Backend not reachable — show the Get Started button
       setShowButton(true);
       setInstalling(false);
@@ -165,6 +175,7 @@ function OllamaSetup({ onComplete }) {
             </div>
           </div>
           <p style={styles.message}>{message || 'Starting...'}</p>
+          <p style={styles.debug}>Debug: {debug} | percent state: {percent}</p>
           {error && <p style={styles.error}>{error}</p>}
         </div>
       </div>
@@ -278,6 +289,12 @@ const styles = {
     fontSize: '0.9rem',
     color: '#cc0000',
     margin: '0 0 1rem 0',
+  },
+  debug: {
+    fontSize: '0.75rem',
+    color: '#999999',
+    margin: '0.5rem 0 0 0',
+    fontFamily: 'monospace',
   },
 };
 
