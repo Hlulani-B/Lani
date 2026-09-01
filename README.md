@@ -18,6 +18,12 @@ Instead of remembering menu paths, the user just says what they want, for exampl
 
 This removes the need to know where a setting lives. For the computer illiterate user, it replaces confusing menus with plain conversation. For the experienced user, it replaces repetitive clicking with a single typed instruction.
 
+## Download
+
+Get the latest Windows installer from the [Releases page](https://github.com/Hlulani-B/Lani/releases).
+
+Run the installer, open Lani, and start typing what you want in plain language.
+
 ## Progress So Far
 
 ### 1. PowerShell Command Map
