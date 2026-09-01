@@ -1,23 +1,27 @@
-const { app, BrowserWindow } = require('electron');
-const path = require('path');
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 1200,
-    height: 800,
+    width: 600,
+    height: 500,
+    frame: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
     },
+    backgroundColor: '#ffffff',
   });
 
-  // In development, load from Vite dev server
-  // In production, load the built files
   if (process.env.NODE_ENV === 'development') {
     win.loadURL('http://localhost:5173');
     win.webContents.openDevTools();
   } else {
-    win.loadFile(path.join(__dirname, 'dist/index.html'));
+    win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
 }
 

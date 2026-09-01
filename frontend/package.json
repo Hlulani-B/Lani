@@ -1,15 +1,18 @@
 {
-  "name": "frontend",
+  "name": "lani-frontend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Lani — Windows Settings via Natural Language",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron": "electron electron.js",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron electron.js\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
