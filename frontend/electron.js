@@ -1,9 +1,44 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+let backendProcess = null;
+
+function startBackend() {
+  // In dev: backend is at ../backend/index.js relative to frontend/
+  // In production: backend is bundled at resources/backend/index.js
+  const backendPath = app.isPackaged
+    ? path.join(process.resourcesPath, 'backend', 'index.js')
+    : path.join(__dirname, '..', '..', 'backend', 'index.js');
+
+  backendProcess = spawn('node', [backendPath], {
+    stdio: 'pipe',
+    env: { ...process.env },
+  });
+
+  backendProcess.stdout.on('data', (data) => {
+    console.log(`[Backend] ${data.toString().trim()}`);
+  });
+
+  backendProcess.stderr.on('data', (data) => {
+    console.error(`[Backend Error] ${data.toString().trim()}`);
+  });
+
+  backendProcess.on('close', (code) => {
+    console.log(`[Backend] Process exited with code ${code}`);
+  });
+}
+
+function stopBackend() {
+  if (backendProcess) {
+    backendProcess.kill();
+    backendProcess = null;
+  }
+}
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -33,6 +68,8 @@ ipcMain.on('close-window', () => {
 });
 
 app.whenReady().then(() => {
+  // Start the backend server automatically
+  startBackend();
   createWindow();
 
   app.on('activate', () => {
@@ -40,6 +77,10 @@ app.whenReady().then(() => {
       createWindow();
     }
   });
+});
+
+app.on('before-quit', () => {
+  stopBackend();
 });
 
 app.on('window-all-closed', () => {
