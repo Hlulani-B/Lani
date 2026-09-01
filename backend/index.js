@@ -221,6 +221,7 @@ app.post('/api/install', async (_req, res) => {
     const modelOk = await isModelAvailable(DEFAULT_MODEL);
     if (modelOk) {
       status.modelAvailable = true;
+      // Broadcast ready BEFORE responding so SSE clients catch it
       updateStatus({ installing: false, currentStep: 'ready', message: 'Lani is ready!', percent: 100 });
       return res.json({ message: 'Already installed and ready', status });
     } else {
@@ -286,8 +287,14 @@ app.post('/api/install', async (_req, res) => {
 
   updateStatus({ ollamaInstalled: true, currentStep: 'checking', message: 'Verifying installation...', percent: 100 });
 
-  // Wait a moment for Ollama service to start
+  // Wait for Ollama service to start, then verify
   await new Promise(r => setTimeout(r, 5000));
+  const verifyInstalled = await isOllamaInstalled();
+  if (!verifyInstalled) {
+    updateStatus({ installing: false, currentStep: 'error', message: 'Installation completed but Ollama was not detected. Please restart your computer and try again.' });
+    return;
+  }
+  console.log('[Install] Ollama verified as installed');
 
   // 2. Pull the default model
   updateStatus({ currentStep: 'pulling', message: 'Preparing AI model...', percent: 0 });
@@ -318,7 +325,7 @@ app.post('/api/install', async (_req, res) => {
     updateStatus({
       installing: false,
       currentStep: 'error',
-      message: 'Model pull failed. You can retry or pull manually.',
+      message: 'Setup failed. You can retry.',
     });
   }
 });

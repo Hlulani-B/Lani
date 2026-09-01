@@ -42,8 +42,13 @@ function OllamaSetup({ onComplete }) {
     fetch(`${API}/api/install`, { method: 'POST' })
       .then((res) => res.json())
       .then((data) => {
-        // If already ready, the SSE 'ready' event will fire and onComplete will be called
-        // Otherwise we just wait for SSE progress updates
+        // Check response directly — SSE might have fired before we connected
+        if (data.status && data.status.currentStep === 'ready') {
+          eventSource.close();
+          setInstalling(false);
+          onComplete();
+          return;
+        }
         if (data.status && data.status.currentStep === 'error') {
           setError(data.message || 'Something went wrong.');
           setInstalling(false);
@@ -88,6 +93,19 @@ function OllamaSetup({ onComplete }) {
 
     fetch(`${API}/api/install`, { method: 'POST' })
       .then((res) => res.json())
+      .then((data) => {
+        if (data.status && data.status.currentStep === 'ready') {
+          eventSource.close();
+          setInstalling(false);
+          onComplete();
+          return;
+        }
+        if (data.status && data.status.currentStep === 'error') {
+          setError(data.message || 'Something went wrong.');
+          setInstalling(false);
+          setShowButton(true);
+        }
+      })
       .catch((err) => {
         setError('Could not connect to server.');
         setInstalling(false);
