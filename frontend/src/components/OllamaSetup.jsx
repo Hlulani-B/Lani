@@ -112,7 +112,7 @@ function OllamaSetup({ onComplete }) {
       <div style={styles.card}>
         {status && status.ollamaInstalled && !status.modelAvailable && (
           <>
-            <p style={styles.info}>Ollama is installed. Pulling the AI model...</p>
+            <p style={styles.info}>Preparing Lani for first use...</p>
             <div style={styles.progressTrack}>
               <div style={{ ...styles.progressFill, width: `${percent}%` }}>
                 <span style={styles.progressText}>{percent}%</span>
@@ -125,18 +125,18 @@ function OllamaSetup({ onComplete }) {
         {(!status || !status.ollamaInstalled) && !installing && (
           <>
             <p style={styles.info}>
-              Lani needs Ollama (a local AI engine) to understand your commands.
-              It will be downloaded and installed automatically.
+              Lani needs to download a few things before it can get started.
+              This only happens once.
             </p>
             <button style={styles.button} onClick={handleInstall}>
-              Install Ollama
+              Get Started
             </button>
           </>
         )}
 
         {installing && (!status || !status.ollamaInstalled) && (
           <>
-            <p style={styles.info}>Installing Ollama...</p>
+            <p style={styles.info}>Setting up Lani...</p>
             <div style={styles.progressTrack}>
               <div style={{ ...styles.progressFill, width: `${percent}%` }}>
                 <span style={styles.progressText}>{percent}%</span>
