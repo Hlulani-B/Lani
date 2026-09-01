@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const API = 'http://localhost:3000';
 
@@ -8,18 +8,25 @@ function OllamaSetup({ onComplete }) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
   const [showButton, setShowButton] = useState(false);
+  const eventSourceRef = useRef(null);
+  const hasStartedRef = useRef(false);
 
   useEffect(() => {
-    // Open SSE connection first to receive progress updates
-    const eventSource = new EventSource(`${API}/api/events`);
+    // Prevent double-initialization (React StrictMode)
+    if (hasStartedRef.current) return;
+    hasStartedRef.current = true;
 
-    eventSource.onmessage = (event) => {
+    // Open SSE connection first to receive progress updates
+    eventSourceRef.current = new EventSource(`${API}/api/events`);
+
+    eventSourceRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setPercent(data.percent || 0);
       setMessage(data.message || '');
 
       if (data.currentStep === 'ready') {
-        eventSource.close();
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
         setInstalling(false);
         onComplete();
       }
@@ -30,9 +37,10 @@ function OllamaSetup({ onComplete }) {
       }
     };
 
-    eventSource.onerror = () => {
+    eventSourceRef.current.onerror = () => {
       // Backend not reachable — show the Get Started button
       setShowButton(true);
+      setInstalling(false);
     };
 
     // Call /api/install — backend checks if already installed, skips if so
@@ -44,7 +52,10 @@ function OllamaSetup({ onComplete }) {
       .then((data) => {
         // Check response directly — SSE might have fired before we connected
         if (data.status && data.status.currentStep === 'ready') {
-          eventSource.close();
+          if (eventSourceRef.current) {
+            eventSourceRef.current.close();
+            eventSourceRef.current = null;
+          }
           setInstalling(false);
           onComplete();
           return;
@@ -62,7 +73,10 @@ function OllamaSetup({ onComplete }) {
       });
 
     return () => {
-      eventSource.close();
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
     };
   }, []);
 
@@ -72,14 +86,21 @@ function OllamaSetup({ onComplete }) {
     setInstalling(true);
     setMessage('Setting up Lani...');
 
-    const eventSource = new EventSource(`${API}/api/events`);
-    eventSource.onmessage = (event) => {
+    // Close any existing connection
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    eventSourceRef.current = new EventSource(`${API}/api/events`);
+    eventSourceRef.current.onmessage = (event) => {
       const data = JSON.parse(event.data);
       setPercent(data.percent || 0);
       setMessage(data.message || '');
 
       if (data.currentStep === 'ready') {
-        eventSource.close();
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
         setInstalling(false);
         onComplete();
       }
@@ -95,7 +116,10 @@ function OllamaSetup({ onComplete }) {
       .then((res) => res.json())
       .then((data) => {
         if (data.status && data.status.currentStep === 'ready') {
-          eventSource.close();
+          if (eventSourceRef.current) {
+            eventSourceRef.current.close();
+            eventSourceRef.current = null;
+          }
           setInstalling(false);
           onComplete();
           return;
@@ -110,7 +134,10 @@ function OllamaSetup({ onComplete }) {
         setError('Could not connect to server.');
         setInstalling(false);
         setShowButton(true);
-        eventSource.close();
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
       });
   };
 
