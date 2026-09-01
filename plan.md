@@ -119,3 +119,5 @@ than run as a browser tab.
 - Exit: small x button rendered inside the React UI itself, wired via IPC
   to tell the Electron main process to close/hide the window. No reliance
   on OS window chrome for closing, since there isn't any.
+
+  ui colour must be professional whte and bold black

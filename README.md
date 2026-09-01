@@ -156,8 +156,56 @@ cd backend
 npm test
 ```
 
+### 10. Frontend (React + Electron)
+
+Built the frontend as three React components, each in its own file under `frontend/src/components/`:
+
+**Component 1 — `OllamaSetup.jsx`**
+- One-time installation gate. Checks `/api/status` on load.
+- If Ollama is not installed: shows install button, opens SSE connection to `/api/events`, and displays download progress as a percentage bar.
+- Transitions to Component 2 on an explicit `ready` event from the SSE stream.
+- Invisible to the user once Ollama is set up.
+
+**Component 2 — `CommandInput.jsx`**
+- Main input screen. User types a request and hits Send.
+- Sends to `/api/chat`. Three possible responses:
+  - `error: 1` with a message — displays the error (gibberish, unrelated request, etc.)
+  - `getParameters: false` — action executed immediately, shows result
+  - `getParameters: true` — hands off action + params + type hints to Component 3
+- Stays ready for the next command after execution.
+
+**Component 3 — `ParameterForm.jsx`**
+- Renders input fields dynamically based on the parameter list and type hints from Component 2.
+- Type hints: `integer` (number input), `string` (text), `path` (file path), `ip` (IP address), `password` (masked).
+- Shows auto-filled values (from NetworkInfoHelper) as read-only fields.
+- Execute sends to `/api/execute`, then returns to Component 2.
+- Cancel discards the pending action and returns to Component 2.
+
+**Design decisions:**
+- No conversation flow. One-shot: type request → form if needed → execute → ready for next.
+- No session state, no conversation history, no pending action storage.
+- Electron wrapper: frameless window (600x500), white and bold black colour scheme.
+- UI colour: professional white background with bold black accents.
+
+Run the frontend:
+
+```bash
+cd frontend
+npm run dev          # Vite dev server on port 5173
+npm run electron:dev # Vite + Electron together
+```
+
+### 11. Error Handling
+
+The `/api/chat` endpoint handles invalid input gracefully:
+
+- Ollama is instructed to return `{ "error": 1, "message": "..." }` for gibberish, unrelated requests, or anything that cannot be fulfilled.
+- The backend checks for `parsed.error` and returns the message to the frontend.
+- Unparseable actions and execution failures also return user-friendly error messages instead of raw 500 errors.
+- The frontend displays the error message in a styled error box on the CommandInput screen.
+
 ### What Is Next
 
-- Build the React + Electron frontend with chat interface and parameter forms
-- Connect the frontend to the SSE endpoint for live installation progress
 - Add support for commands that require admin privileges (UAC elevation)
+- Add confirmation step for destructive/sensitive actions (e.g. remove user, set static IP, disable firewall)
+- Add voice input via speech-to-text
