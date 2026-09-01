@@ -3,69 +3,69 @@ import React, { useState, useEffect } from 'react';
 const API = 'http://localhost:3000';
 
 function OllamaSetup({ onComplete }) {
-  const [status, setStatus] = useState(null);
   const [installing, setInstalling] = useState(false);
   const [percent, setPercent] = useState(0);
   const [message, setMessage] = useState('');
-  const [checking, setChecking] = useState(true);
+  const [error, setError] = useState(null);
+  const [showButton, setShowButton] = useState(false);
 
   useEffect(() => {
-    let eventSource = null;
+    // Open SSE connection first to receive progress updates
+    const eventSource = new EventSource(`${API}/api/events`);
 
-    async function checkStatus() {
-      try {
-        const res = await fetch(`${API}/api/status`);
-        const data = await res.json();
-        setStatus(data);
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      setPercent(data.percent || 0);
+      setMessage(data.message || '');
 
-        if (data.modelAvailable) {
-          onComplete();
-          return;
-        }
-
-        setChecking(false);
-
-        // If Ollama is installed but model is not, start SSE and trigger install
-        if (data.ollamaInstalled) {
-          startSse();
-          const installRes = await fetch(`${API}/api/install`, { method: 'POST' });
-          const installData = await installRes.json();
-          setInstalling(true);
-          setMessage(installData.message || 'Pulling model...');
-        }
-      } catch (err) {
-        console.error('Status check failed:', err);
-        setChecking(false);
+      if (data.currentStep === 'ready') {
+        eventSource.close();
+        setInstalling(false);
+        onComplete();
       }
-    }
 
-    function startSse() {
-      eventSource = new EventSource(`${API}/api/events`);
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        setPercent(data.percent || 0);
-        setMessage(data.message || '');
+      if (data.currentStep === 'error') {
+        setError(data.message || 'Something went wrong.');
+        setInstalling(false);
+      }
+    };
 
-        if (data.currentStep === 'ready') {
+    eventSource.onerror = () => {
+      // Backend not reachable — show the Get Started button
+      setShowButton(true);
+    };
+
+    // Call /api/install — backend checks if already installed, skips if so
+    setInstalling(true);
+    setMessage('Setting up Lani...');
+
+    fetch(`${API}/api/install`, { method: 'POST' })
+      .then((res) => res.json())
+      .then((data) => {
+        // If already ready, the SSE 'ready' event will fire and onComplete will be called
+        // Otherwise we just wait for SSE progress updates
+        if (data.status && data.status.currentStep === 'error') {
+          setError(data.message || 'Something went wrong.');
           setInstalling(false);
-          onComplete();
+          setShowButton(true);
         }
-      };
-      eventSource.onerror = () => {
-        console.error('SSE connection error');
-      };
-    }
-
-    checkStatus();
+      })
+      .catch((err) => {
+        // Backend not reachable
+        setShowButton(true);
+        setInstalling(false);
+      });
 
     return () => {
-      if (eventSource) eventSource.close();
+      eventSource.close();
     };
   }, []);
 
-  const handleInstall = async () => {
+  const handleInstall = () => {
+    setError(null);
+    setShowButton(false);
     setInstalling(true);
-    setMessage('Starting installation...');
+    setMessage('Setting up Lani...');
 
     const eventSource = new EventSource(`${API}/api/events`);
     eventSource.onmessage = (event) => {
@@ -78,78 +78,69 @@ function OllamaSetup({ onComplete }) {
         setInstalling(false);
         onComplete();
       }
+
+      if (data.currentStep === 'error') {
+        setError(data.message || 'Something went wrong.');
+        setInstalling(false);
+        setShowButton(true);
+      }
     };
 
-    try {
-      await fetch(`${API}/api/install`, { method: 'POST' });
-    } catch (err) {
-      console.error('Install failed:', err);
-      setMessage('Installation failed. Please try again.');
-      setInstalling(false);
-      eventSource.close();
-    }
+    fetch(`${API}/api/install`, { method: 'POST' })
+      .then((res) => res.json())
+      .catch((err) => {
+        setError('Could not connect to server.');
+        setInstalling(false);
+        setShowButton(true);
+        eventSource.close();
+      });
   };
 
-  if (checking) {
+  // Show progress bar when installing
+  if (installing) {
     return (
       <div style={styles.container}>
         <h2 style={styles.title}>Lani</h2>
-        <p style={styles.subtitle}>Checking setup...</p>
+        <p style={styles.subtitle}>Windows Settings via Natural Language</p>
+        <div style={styles.card}>
+          <p style={styles.info}>Setting up Lani...</p>
+          <div style={styles.progressTrack}>
+            <div style={{ ...styles.progressFill, width: `${percent}%` }}>
+              <span style={styles.progressText}>{percent}%</span>
+            </div>
+          </div>
+          <p style={styles.message}>{message}</p>
+          {error && <p style={styles.error}>{error}</p>}
+        </div>
       </div>
     );
   }
 
-  // Ollama is ready — this component should not render
-  if (status && status.modelAvailable) {
-    return null;
+  // Show Get Started button if backend not reachable or error occurred
+  if (showButton) {
+    return (
+      <div style={styles.container}>
+        <h2 style={styles.title}>Lani</h2>
+        <p style={styles.subtitle}>Windows Settings via Natural Language</p>
+        <div style={styles.card}>
+          <p style={styles.info}>
+            Lani needs to download a few things before it can get started.
+            This only happens once.
+          </p>
+          {error && <p style={styles.error}>{error}</p>}
+          <button style={styles.button} onClick={handleInstall}>
+            Get Started
+          </button>
+        </div>
+      </div>
+    );
   }
 
+  // Brief loading state while checking
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Lani</h2>
-      <p style={styles.subtitle}>Windows Settings via Natural Language</p>
-
-      <div style={styles.card}>
-        {status && status.ollamaInstalled && !status.modelAvailable && (
-          <>
-            <p style={styles.info}>Preparing Lani for first use...</p>
-            <div style={styles.progressTrack}>
-              <div style={{ ...styles.progressFill, width: `${percent}%` }}>
-                <span style={styles.progressText}>{percent}%</span>
-              </div>
-            </div>
-            <p style={styles.message}>{message}</p>
-          </>
-        )}
-
-        {(!status || !status.ollamaInstalled) && !installing && (
-          <>
-            <p style={styles.info}>
-              Lani needs to download a few things before it can get started.
-              This only happens once.
-            </p>
-            <button style={styles.button} onClick={handleInstall}>
-              Get Started
-            </button>
-          </>
-        )}
-
-        {installing && (!status || !status.ollamaInstalled) && (
-          <>
-            <p style={styles.info}>Setting up Lani...</p>
-            <div style={styles.progressTrack}>
-              <div style={{ ...styles.progressFill, width: `${percent}%` }}>
-                <span style={styles.progressText}>{percent}%</span>
-              </div>
-            </div>
-            <p style={styles.message}>{message}</p>
-          </>
-        )}
-
-        {status && status.currentStep === 'error' && (
-          <p style={styles.error}>{message || 'Something went wrong. Please try again.'}</p>
-        )}
-      </div>
+      <p style={styles.subtitle}>Checking setup...</p>
     </div>
   );
 }
@@ -232,7 +223,7 @@ const styles = {
   error: {
     fontSize: '0.9rem',
     color: '#cc0000',
-    margin: '0',
+    margin: '0 0 1rem 0',
   },
 };
 
