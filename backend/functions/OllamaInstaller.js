@@ -68,17 +68,17 @@ export async function installOllama(onProgress) {
 
   try {
     // Step 1 — Download
-    notify('downloading', 'Downloading Ollama installer...', 0);
+    notify('downloading', 'Downloading AI engine...', 0);
 
     const installerPath = join(tmpdir(), 'OllamaSetup.exe');
     await downloadFile(OLLAMA_DOWNLOAD_URL, installerPath, ({ percent }) => {
-      notify('downloading', `Downloading Ollama... ${percent}%`, percent);
+      notify('downloading', `Downloading... ${percent}%`, percent);
     });
 
     notify('downloading', 'Download complete', 100);
 
     // Step 2 — Install silently
-    notify('installing', 'Installing Ollama...', 0);
+    notify('installing', 'Installing...', 0);
 
     await new Promise((resolve, reject) => {
       execFile(installerPath, ['/VERYSILENT', '/NORESTART'], { timeout: 120000 }, (error) => {
@@ -87,7 +87,7 @@ export async function installOllama(onProgress) {
       });
     });
 
-    notify('installed', 'Ollama installed successfully', 100);
+    notify('installed', 'Installation complete', 100);
     return true;
   } catch (error) {
     notify('error', `Installation failed: ${error.message}`, 0);
@@ -107,7 +107,7 @@ export async function pullModel(model, onProgress) {
   };
 
   try {
-    notify('pulling', `Pulling model ${model}...`, 0);
+    notify('pulling', 'Preparing AI model...', 0);
 
     const body = JSON.stringify({ name: model, stream: false });
 
@@ -125,7 +125,7 @@ export async function pullModel(model, onProgress) {
         clearTimeout(timeout);
         if (!res.ok) return reject(new Error(`Pull failed: ${res.status}`));
         const text = await res.text();
-        notify('pulling', `Model ${model} ready`, 100);
+        notify('pulling', 'AI model ready', 100);
         resolve();
       }).catch((err) => {
         clearTimeout(timeout);
@@ -135,7 +135,7 @@ export async function pullModel(model, onProgress) {
 
     return true;
   } catch (error) {
-    notify('error', `Model pull failed: ${error.message}`, 0);
+    notify('error', `Setup failed: ${error.message}`, 0);
     return false;
   }
 }

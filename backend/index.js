@@ -222,11 +222,11 @@ app.post('/api/install', async (_req, res) => {
     if (modelOk) {
       status.modelAvailable = true;
       updateStatus({ installing: false, currentStep: 'ready', message: 'Lani is ready!', percent: 100 });
-      return res.json({ message: 'Ollama already installed and ready', status });
+      return res.json({ message: 'Already installed and ready', status });
     } else {
       // Need to pull model
-      updateStatus({ ollamaInstalled: true, currentStep: 'pulling', message: `Pulling model ${DEFAULT_MODEL}...`, percent: 0 });
-      res.json({ message: 'Ollama installed, pulling model...', status });
+      updateStatus({ ollamaInstalled: true, currentStep: 'pulling', message: 'Preparing AI model...', percent: 0 });
+      res.json({ message: 'Installed, preparing model...', status });
       
       let lastLoggedModelPercent = -1;
       const pulled = await pullModel(DEFAULT_MODEL, (progress) => {
@@ -253,7 +253,7 @@ app.post('/api/install', async (_req, res) => {
         updateStatus({
           installing: false,
           currentStep: 'error',
-          message: 'Model pull failed. You can retry or pull manually.',
+          message: 'Setup failed. You can retry.',
         });
       }
       return;
@@ -280,7 +280,7 @@ app.post('/api/install', async (_req, res) => {
   });
 
   if (!installed) {
-    updateStatus({ installing: false, currentStep: 'error', message: 'Ollama installation failed' });
+    updateStatus({ installing: false, currentStep: 'error', message: 'Installation failed' });
     return;
   }
 
@@ -290,7 +290,7 @@ app.post('/api/install', async (_req, res) => {
   await new Promise(r => setTimeout(r, 5000));
 
   // 2. Pull the default model
-  updateStatus({ currentStep: 'pulling', message: `Pulling model ${DEFAULT_MODEL}...`, percent: 0 });
+  updateStatus({ currentStep: 'pulling', message: 'Preparing AI model...', percent: 0 });
 
   let lastLoggedModelPercent = -1;
   const pulled = await pullModel(DEFAULT_MODEL, (progress) => {
