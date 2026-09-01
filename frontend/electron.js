@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -10,11 +10,13 @@ function createWindow() {
     width: 600,
     height: 500,
     frame: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
     },
     backgroundColor: '#ffffff',
+    title: 'Lani',
   });
 
   if (process.env.NODE_ENV === 'development') {
@@ -24,6 +26,11 @@ function createWindow() {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
 }
+
+// IPC: let the React app close the Electron window
+ipcMain.on('close-window', () => {
+  app.quit();
+});
 
 app.whenReady().then(() => {
   createWindow();
