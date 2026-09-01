@@ -343,7 +343,14 @@ Return ONLY valid JSON (no markdown, no explanation) with one of these structure
    { "getParameters": false, "action": "ClassName.methodName()" }
 
 2. If the function needs parameters that the user has NOT provided:
-   { "getParameters": true, "action": "ClassName.methodName", "params": [{ "name": "paramName", "type": "number|text|path" }] }
+   { "getParameters": true, "action": "ClassName.methodName", "params": [{ "name": "paramName", "type": "typeHint" }] }
+
+   Available type hints:
+   - "integer" — whole numbers (e.g., volume level 0-100, brightness, subnet prefix)
+   - "string" — text input (e.g., SSID, username, VPN name, feature name, timezone)
+   - "path" — file path (e.g., wallpaper image path)
+   - "ip" — IP address (e.g., 192.168.1.1)
+   - "password" — sensitive text (will be masked in UI)
 
 3. If the request is gibberish, unrelated to Windows settings, or cannot be fulfilled:
    { "error": 1, "message": "A friendly message explaining what you can help with" }
@@ -352,6 +359,7 @@ Rules:
 - Match the user's intent to the closest function.
 - If the user already provided the parameter values in their message, include them and set getParameters to false with the full action string including args.
 - Only set getParameters to true when the function requires parameters and the user has not supplied them.
+- Always specify the correct type hint for each parameter so the frontend can show the right input field.
 - If the request is clearly not about Windows settings or computer actions, return the error format.
 - Return ONLY the JSON object, nothing else.`;
 
