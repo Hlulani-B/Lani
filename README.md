@@ -236,6 +236,10 @@ The `/api/chat` endpoint handles invalid input gracefully:
 - Problem: The project uses ES modules (`import`/`export`) with `"type": "module"` in package.json, but Electron's main process traditionally uses CommonJS (`require`).
 - Solution: Converted `electron.js` to ESM syntax, using `fileURLToPath` and `path.dirname` to recreate `__dirname` which doesn't exist in ESM.
 
+**Frontend stuck at 0% even when Ollama already installed**
+- Problem: The frontend checked `currentStep === 'ready' && ollamaInstalled && modelAvailable` to decide whether to skip the install UI. But `GET /api/status` only refreshed the two booleans — it never updated `currentStep`. So after a backend restart, `currentStep` stayed at `''` and the frontend was stuck waiting for SSE events that would never come.
+- Solution: Changed the frontend check to only use the two booleans (`ollamaInstalled && modelAvailable`) as the source of truth. Also updated `GET /api/status` on the backend to set `currentStep = 'ready'` when both booleans are true, keeping it consistent for anything else that relies on it.
+
 ### What Is Next
 
 - Add support for commands that require admin privileges (UAC elevation)
