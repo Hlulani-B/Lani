@@ -1,7 +1,8 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
+import { autoUpdater } from 'electron-updater';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,6 +61,8 @@ function createWindow() {
   } else {
     win.loadFile(path.join(__dirname, 'dist', 'index.html'));
   }
+
+  return win;
 }
 
 // IPC: let the React app close the Electron window
@@ -67,14 +70,72 @@ ipcMain.on('close-window', () => {
   app.quit();
 });
 
+// ── Auto-update setup ────────────────────────────────────────
+// Update check is triggered automatically on app ready (see app.whenReady below).
+// If an update is found, it downloads silently and prompts the user to restart.
+// No popups if there's no update.
+
+let mainWindow = null;
+
+function setupAutoUpdater() {
+  // Don't check for updates in development
+  if (!app.isPackaged) return;
+
+  autoUpdater.autoDownload = true;
+  autoUpdater.autoInstallOnAppQuit = true;
+
+  autoUpdater.on('update-available', (info) => {
+    console.log(`[AutoUpdate] Update available: ${info.version}`);
+  });
+
+  autoUpdater.on('update-not-available', () => {
+    console.log('[AutoUpdate] No updates available');
+  });
+
+  autoUpdater.on('download-progress', (progress) => {
+    console.log(`[AutoUpdate] Download: ${Math.round(progress.percent)}%`);
+  });
+
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log(`[AutoUpdate] Update downloaded: ${info.version}`);
+    // Prompt the user to restart and install
+    if (mainWindow) {
+      dialog.showMessageBox(mainWindow, {
+        type: 'info',
+        title: 'Update Ready',
+        message: `A new version (${info.version}) is ready to install.\n\nRestart Lani to apply the update?`,
+        buttons: ['Restart Now', 'Later'],
+        defaultId: 0,
+        cancelId: 1,
+      }).then(({ response }) => {
+        if (response === 0) {
+          autoUpdater.quitAndInstall();
+        }
+      });
+    }
+  });
+
+  autoUpdater.on('error', (err) => {
+    console.error(`[AutoUpdate] Error: ${err.message}`);
+  });
+
+  // Check for updates now
+  autoUpdater.checkForUpdates().catch((err) => {
+    console.error(`[AutoUpdate] Check failed: ${err.message}`);
+  });
+}
+
 app.whenReady().then(() => {
   // Start the backend server automatically
   startBackend();
-  createWindow();
+  mainWindow = createWindow();
+
+  // ── Trigger auto-update check on app launch ──
+  setupAutoUpdater();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      mainWindow = createWindow();
     }
   });
 });
