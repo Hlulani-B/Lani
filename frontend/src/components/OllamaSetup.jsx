@@ -12,6 +12,33 @@ function OllamaSetup({ onComplete }) {
   const eventSourceRef = useRef(null);
   const hasStartedRef = useRef(false);
 
+  // Poll /api/status every 2 seconds to check if ready
+  useEffect(() => {
+    const checkStatus = () => {
+      fetch(`${API}/api/status`)
+        .then((res) => res.json())
+        .then((statusData) => {
+          console.log('[Poll] Status:', statusData);
+          if (statusData.ollamaInstalled && statusData.modelAvailable) {
+            console.log('[Poll] Ready! Navigating to CommandInput');
+            setDebug('Ready! Launching...');
+            onComplete();
+          }
+        })
+        .catch((err) => {
+          console.error('[Poll] Error:', err);
+        });
+    };
+
+    const interval = setInterval(checkStatus, 2000);
+    console.log('[Poll] Started polling /api/status every 2 seconds');
+
+    return () => {
+      console.log('[Poll] Stopped polling');
+      clearInterval(interval);
+    };
+  }, [onComplete]);
+
   useEffect(() => {
     console.log('[OllamaSetup] useEffect running, hasStarted:', hasStartedRef.current);
     setDebug(`useEffect running, hasStarted: ${hasStartedRef.current}`);
