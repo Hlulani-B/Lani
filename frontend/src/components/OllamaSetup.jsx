@@ -258,14 +258,14 @@ function OllamaSetup({ onComplete }) {
         <p style={styles.subtitle}>Windows Settings via Natural Language</p>
         <div style={styles.card}>
           <p style={styles.info}>
-            Before we begin, please make sure you have Ollama installed and running on your computer.
+            First time setup. Lani needs to install a few things before it can run.
           </p>
           <p style={styles.info}>
-            Download it from <a href="https://ollama.com" target="_blank" rel="noopener noreferrer" style={styles.link}>ollama.com</a>
+            When Windows asks "Do you want to allow this app to make changes to your device?" — click Yes. This is the AI engine installing.
           </p>
           {error && <p style={styles.error}>{error}</p>}
           <button style={styles.button} onClick={handleInstall}>
-            I'm Ready
+            Get Started
           </button>
         </div>
       </div>
