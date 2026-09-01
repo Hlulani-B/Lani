@@ -166,6 +166,20 @@ let status = {
   percent: 0,
 };
 
+// Check actual system state on startup (survives backend restarts)
+async function initializeStatus() {
+  status.ollamaInstalled = await isOllamaInstalled();
+  if (status.ollamaInstalled) {
+    status.modelAvailable = await isModelAvailable(DEFAULT_MODEL);
+    if (status.modelAvailable) {
+      status.currentStep = 'ready';
+      status.message = 'Lani is ready!';
+      status.percent = 100;
+    }
+  }
+  console.log(`[Init] Ollama installed: ${status.ollamaInstalled}, Model available: ${status.modelAvailable}`);
+}
+
 // SSE clients
 let sseClients = [];
 
@@ -492,8 +506,9 @@ app.post('/api/execute', async (req, res) => {
 });
 
 // ── Start ────────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Lani server running on http://localhost:${PORT}`);
+  await initializeStatus();
   console.log('Frontend should call POST /api/install to start installation');
 });
 
