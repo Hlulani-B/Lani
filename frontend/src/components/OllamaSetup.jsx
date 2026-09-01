@@ -23,6 +23,48 @@ function OllamaSetup({ onComplete }) {
     }
     hasStartedRef.current = true;
 
+    // First, check if already installed and ready
+    console.log('[OllamaSetup] Checking /api/status first...');
+    setDebug('Checking if already set up...');
+    
+    fetch(`${API}/api/status`)
+      .then((res) => {
+        console.log('[Status] Response status:', res.status);
+        return res.json();
+      })
+      .then((statusData) => {
+        console.log('[Status] Response data:', statusData);
+        
+        // If already ready, skip install UI entirely
+        if (statusData.currentStep === 'ready' && statusData.ollamaInstalled && statusData.modelAvailable) {
+          console.log('[OllamaSetup] Already ready, skipping to CommandInput');
+          setDebug('Already set up, launching...');
+          onComplete();
+          return;
+        }
+        
+        // Not ready yet, show install UI
+        console.log('[OllamaSetup] Not ready, showing install UI');
+        startInstallProcess();
+      })
+      .catch((err) => {
+        console.error('[Status] Fetch error:', err);
+        setDebug(`Status check failed: ${err.message}`);
+        // Backend not reachable, show button
+        setShowButton(true);
+        setInstalling(false);
+      });
+
+    return () => {
+      console.log('[OllamaSetup] Cleanup - closing SSE');
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+    };
+  }, []);
+
+  const startInstallProcess = () => {
     console.log('[OllamaSetup] Opening SSE connection to', `${API}/api/events`);
     setDebug('Opening SSE connection...');
     
@@ -111,15 +153,7 @@ function OllamaSetup({ onComplete }) {
         setShowButton(true);
         setInstalling(false);
       });
-
-    return () => {
-      console.log('[OllamaSetup] Cleanup - closing SSE');
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-    };
-  }, []);
+  };
 
   const handleInstall = () => {
     setError(null);
@@ -224,11 +258,14 @@ function OllamaSetup({ onComplete }) {
         <p style={styles.subtitle}>Windows Settings via Natural Language</p>
         <div style={styles.card}>
           <p style={styles.info}>
-            First time setup. Lani needs a couple of things installed before it can run.
+            Before we begin, please make sure you have Ollama installed and running on your computer.
+          </p>
+          <p style={styles.info}>
+            Download it from <a href="https://ollama.com" target="_blank" rel="noopener noreferrer" style={styles.link}>ollama.com</a>
           </p>
           {error && <p style={styles.error}>{error}</p>}
           <button style={styles.button} onClick={handleInstall}>
-            Get Started
+            I'm Ready
           </button>
         </div>
       </div>
@@ -318,6 +355,10 @@ const styles = {
     border: 'none',
     borderRadius: '4px',
     cursor: 'pointer',
+  },
+  link: {
+    color: '#0066cc',
+    textDecoration: 'underline',
   },
   error: {
     fontSize: '0.9rem',
