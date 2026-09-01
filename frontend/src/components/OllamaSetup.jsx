@@ -13,10 +13,19 @@ function OllamaSetup({ onComplete }) {
   const hasStartedRef = useRef(false);
 
   useEffect(() => {
+    console.log('[OllamaSetup] useEffect running, hasStarted:', hasStartedRef.current);
+    setDebug(`useEffect running, hasStarted: ${hasStartedRef.current}`);
+    
     // Prevent double-initialization (React StrictMode)
-    if (hasStartedRef.current) return;
+    if (hasStartedRef.current) {
+      console.log('[OllamaSetup] Already started, skipping');
+      return;
+    }
     hasStartedRef.current = true;
 
+    console.log('[OllamaSetup] Opening SSE connection to', `${API}/api/events`);
+    setDebug('Opening SSE connection...');
+    
     // Open SSE connection first to receive progress updates
     eventSourceRef.current = new EventSource(`${API}/api/events`);
 
@@ -60,13 +69,17 @@ function OllamaSetup({ onComplete }) {
     };
 
     // Call /api/install — backend checks if already installed, skips if so
+    console.log('[OllamaSetup] Calling POST /api/install');
     setInstalling(true);
     setMessage(''); // Let SSE provide the live message
 
     fetch(`${API}/api/install`, { method: 'POST' })
-      .then((res) => res.json())
+      .then((res) => {
+        console.log('[Install] Response status:', res.status);
+        return res.json();
+      })
       .then((data) => {
-        console.log('[Install] Response:', data);
+        console.log('[Install] Response data:', data);
         setDebug(`Install response: step=${data.status?.currentStep}, percent=${data.status?.percent}`);
         
         // Grab current progress from response immediately
@@ -92,12 +105,15 @@ function OllamaSetup({ onComplete }) {
         }
       })
       .catch((err) => {
+        console.error('[Install] Fetch error:', err);
+        setDebug(`Install error: ${err.message}`);
         // Backend not reachable
         setShowButton(true);
         setInstalling(false);
       });
 
     return () => {
+      console.log('[OllamaSetup] Cleanup - closing SSE');
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;

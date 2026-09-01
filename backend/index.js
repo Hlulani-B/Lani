@@ -207,23 +207,32 @@ app.get('/api/status', async (_req, res) => {
 
 // GET /api/events — SSE stream for live progress
 app.get('/api/events', (_req, res) => {
+  console.log('[Backend] SSE client connected to /api/events');
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders();
 
   // Send current state immediately
+  console.log('[Backend] Sending initial status:', status);
   res.write(`data: ${JSON.stringify(status)}\n\n`);
 
   sseClients.push(res);
+  console.log(`[Backend] SSE clients count: ${sseClients.length}`);
   _req.on('close', () => {
+    console.log('[Backend] SSE client disconnected');
     sseClients = sseClients.filter(c => c !== res);
+    console.log(`[Backend] SSE clients count: ${sseClients.length}`);
   });
 });
 
 // POST /api/install — trigger Ollama install + model pull
 app.post('/api/install', async (_req, res) => {
+  console.log('[Backend] POST /api/install received');
+  console.log('[Backend] Current status:', status);
+  
   if (status.installing) {
+    console.log('[Backend] Installation already in progress');
     return res.json({ message: 'Installation already in progress', status });
   }
 
